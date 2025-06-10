@@ -70,10 +70,6 @@ export default function Grades({
   const [modalDetails, setModalDetails] = useState(0);
   const [modalType, setModalType] = useState("assignment");
   const [optimizeProps, setOptimizeProps] = useState<OptimizeProps>({});
-  const [finalProps, setFinalProps] = useState<FinalCalcProps>({
-    desiredGrade: null,
-    finalWeight: null,
-  });
   const [finalGradeSolution, setFinalGradeSolution] = useState(null);
   const [solutions, setSolution] = useState<[number[], number][]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -231,30 +227,20 @@ export default function Grades({
     setSolution(results);
   };
 
-  const calcFinal = () => {
-    setModalType("calcFinal");
 
-    setFinalProps({
-      desiredGrade: course.gradingScale
-        ? course.gradingScale[Object.keys(course.gradingScale)[0]][0]
-        : 90,
-      finalWeight: 10,
-    });
-    setShowModal(true);
-  };
 
   const calculateFinalGradeData = () => {
-    console.log(finalProps);
+    console.log(optimizeProps);
     if (
-      finalProps.desiredGrade === undefined ||
-      finalProps.finalWeight === undefined ||
-      finalProps.desiredGrade === null ||
-      finalProps.finalWeight === null
+      optimizeProps.desiredGrade === undefined ||
+      optimizeProps.finalWeight === undefined ||
+      optimizeProps.desiredGrade === null ||
+      optimizeProps.finalWeight === null
     ) {
       return;
     }
 
-    const { desiredGrade, finalWeight } = finalProps;
+    const { desiredGrade, finalWeight } = optimizeProps;
 
     if (
       desiredGrade < 1 ||
@@ -413,6 +399,55 @@ export default function Grades({
                     </div>
                   </div>
                 ))}
+				 <div>
+                  <label
+                    htmlFor="email"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Final Weight (% of total grade)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={optimizeProps?.finalWeight}
+                      onChange={(e) =>
+                        setOptimizeProps((prev) => ({
+                          ...prev,
+                          finalWeight: parseFloat(e.target.value),
+                        }))
+                      }
+                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="10"
+                    />
+                  </div>
+                </div>
+                {finalGradeSolution !== null && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900 dark:border-blue-700">
+                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                      Final Grade Needed
+                    </h3>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-300">
+                      {finalGradeSolution}%
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                      You need to score {finalGradeSolution}% on your final exam
+                      to achieve a {optimizeProps.desiredGrade}% overall grade.
+                    </p>
+                    {parseFloat(finalGradeSolution) > 100 && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium">
+                        ⚠️ This target may not be achievable with the current
+                        grade and final weight.
+                      </p>
+                    )}
+                    {parseFloat(finalGradeSolution) < 0 && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
+                        ✅ You've already achieved your target grade!
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="overflow-x-auto shadow-md rounded-lg mt-5 border border-gray-300 dark:border-gray-600">
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -464,93 +499,9 @@ export default function Grades({
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-          {modalType === "calcFinal" && (
-            <div>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Desired Grade (1-100)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={finalProps?.desiredGrade}
-                      onChange={(e) =>
-                        setFinalProps((prev) => ({
-                          ...prev,
-                          desiredGrade: parseFloat(e.target.value),
-                        }))
-                      }
-                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder={
-                        course.gradingScale
-                          ? String(
-                              course.gradingScale[
-                                Object.keys(course.gradingScale)[1]
-                              ][0]
-                            )
-                          : "90"
-                      }
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Final Weight (% of total grade)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={finalProps?.finalWeight}
-                      onChange={(e) =>
-                        setFinalProps((prev) => ({
-                          ...prev,
-                          finalWeight: parseFloat(e.target.value),
-                        }))
-                      }
-                      className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="10"
-                    />
-                  </div>
-                </div>
-                {finalGradeSolution !== null && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900 dark:border-blue-700">
-                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                      Final Grade Needed
-                    </h3>
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-300">
-                      {finalGradeSolution}%
-                    </div>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                      You need to score {finalGradeSolution}% on your final exam
-                      to achieve a {finalProps.desiredGrade}% overall grade.
-                    </p>
-                    {parseFloat(finalGradeSolution) > 100 && (
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium">
-                        ⚠️ This target may not be achievable with the current
-                        grade and final weight.
-                      </p>
-                    )}
-                    {parseFloat(finalGradeSolution) < 0 && (
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
-                        ✅ You've already achieved your target grade!
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
+		 
+         
+
             </div>
           )}
         </Modal.Body>
@@ -586,26 +537,10 @@ export default function Grades({
                 Close
               </button>
               <button
-                onClick={optimizeGrades}
+                onClick={()=>{optimizeGrades();calculateFinalGradeData()}}
                 className="rounded-lg bg-primary-500 px-2.5 py-2.5 text-center text-xs sm:text-sm font-medium text-white hover:bg-primary-600 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Optimize
-              </button>
-            </div>
-          )}
-          {modalType === "calcFinal" && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="rounded-lg bg-gray-500 px-2.5 py-2.5 text-center text-xs sm:text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800"
-              >
-                Close
-              </button>
-              <button
-                onClick={calculateFinalGradeData}
-                className="rounded-lg bg-primary-500 px-2.5 py-2.5 text-center text-xs sm:text-sm font-medium text-white hover:bg-primary-600 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >
-                Calculate
               </button>
             </div>
           )}
@@ -697,13 +632,7 @@ export default function Grades({
             >
               <BsGraphUp size={"1.3rem"} />
             </button>
-            <button
-              type="button"
-              onClick={calcFinal}
-              className=" bg-primary-500 border border-primary-500 focus:outline-none hover:bg-primary-600 focus:ring-4 focus:ring-primary-200 font-medium rounded-lg text-sm p-2.5 dark:bg-primary-600 text-white dark:hover:bg-primary-700 dark:focus:ring-primary-400"
-            >
-              <HiOutlineCalculator size={"1.3rem"} />
-            </button>
+
             <button
               type="button"
               onClick={add}
